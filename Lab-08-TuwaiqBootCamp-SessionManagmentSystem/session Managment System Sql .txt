@@ -1,0 +1,178 @@
+-- Create the database
+CREATE DATABASE session_management_system;
+
+-- Use the database
+USE session_management_system;
+
+-- ========================================
+-- TABLE: academic_certificate
+-- ========================================
+CREATE TABLE academic_certificate (
+                                      id INTEGER PRIMARY KEY,
+                                      Specialization VARCHAR(30),
+                                      university VARCHAR(20)
+);
+
+-- ========================================
+-- TABLE: academic_coordinator
+-- ========================================
+CREATE TABLE academic_coordinator (
+                                      id INTEGER PRIMARY KEY,
+                                      documentation VARCHAR(10),
+                                      subject_evaluation INTEGER,
+                                      email VARCHAR(30) UNIQUE,
+                                      phone VARCHAR(10) UNIQUE,
+                                      assigned_date DATETIME,
+                                      academic_certification_id INTEGER,
+                                      FOREIGN KEY (academic_certification_id) REFERENCES academic_certificate(id)
+);
+
+-- ========================================
+-- TABLE: Shaykh
+-- ========================================
+CREATE TABLE Shaykh (
+                        id INTEGER PRIMARY KEY,
+                        name VARCHAR(20),
+                        permit_number VARCHAR(10) UNIQUE,
+                        chair_number VARCHAR(10),
+                        acadmic_id INTEGER,
+                        FOREIGN KEY (acadmic_id) REFERENCES academic_certificate(id)
+);
+
+-- ========================================
+-- TABLE: session
+-- ========================================
+CREATE TABLE session (
+                         id INTEGER PRIMARY KEY,
+                         session_permit_number INTEGER UNIQUE,
+                         Book VARCHAR(20) UNIQUE,
+                         name VARCHAR(30),
+                         subject VARCHAR(20),
+                         page_numbers INTEGER,
+                         instructor_id INTEGER,
+                         FOREIGN KEY (instructor_id) REFERENCES Shaykh(id)
+);
+
+-- ========================================
+-- TABLE: coordinator_Drs
+-- ========================================
+CREATE TABLE coordinator_Drs (
+                                 id INTEGER PRIMARY KEY,
+                                 place VARCHAR(20) UNIQUE,
+                                 today_page INTEGER,
+                                 datetime DATETIME UNIQUE,
+                                 student_avg_number INTEGER,
+                                 session_id INTEGER,
+                                 cordinator_id INTEGER,
+                                 FOREIGN KEY (session_id) REFERENCES session(id),
+                                 FOREIGN KEY (cordinator_id) REFERENCES academic_coordinator(id),
+                                 UNIQUE (session_id, cordinator_id)
+);
+
+-- ========================================
+-- INSERT INTO academic_certificate
+-- ========================================
+INSERT INTO academic_certificate (id, Specialization, university) VALUES
+                                                                      (1, 'Fiqh', 'Umm Al-Qura'),
+                                                                      (2, 'Hadith', 'Imam U'),
+                                                                      (3, 'Aqeedah', 'Islamic U'),
+                                                                      (4, 'Tafsir', 'Medina U'),
+                                                                      (5, 'Arabic', 'King Saud');
+
+-- UPDATE academic_certificate
+UPDATE academic_certificate SET university = 'Al-Imam Univ' WHERE id = 1;
+UPDATE academic_certificate SET Specialization = 'Usul al-Fiqh' WHERE id = 2;
+UPDATE academic_certificate SET university = 'Islamic Institute' WHERE id = 3;
+UPDATE academic_certificate SET Specialization = 'Quranic Sciences' WHERE id = 4;
+UPDATE academic_certificate SET university = 'Arabic Univ' WHERE id = 5;
+
+-- DELETE academic_certificate (Only if not referenced in academic_coordinator)
+DELETE FROM academic_certificate WHERE id = 5 AND id NOT IN (
+    SELECT DISTINCT academic_certification_id FROM academic_coordinator
+);
+
+-- ========================================
+-- INSERT INTO academic_coordinator
+-- ========================================
+INSERT INTO academic_coordinator (id, documentation, subject_evaluation, email, phone, assigned_date, academic_certification_id) VALUES
+                                                                                                                                     (1, 'Yes', 85, 'coord1@mail.com', '0500000001', NOW(), 1),
+                                                                                                                                     (2, 'No', 90, 'coord2@mail.com', '0500000002', NOW(), 2),
+                                                                                                                                     (3, 'Yes', 88, 'coord3@mail.com', '0500000003', NOW(), 3),
+                                                                                                                                     (4, 'No', 92, 'coord4@mail.com', '0500000004', NOW(), 4),
+                                                                                                                                     (5, 'Yes', 95, 'coord5@mail.com', '0500000005', NOW(), 1);
+
+-- UPDATE academic_coordinator
+UPDATE academic_coordinator SET documentation = 'No' WHERE id = 1;
+UPDATE academic_coordinator SET subject_evaluation = 93 WHERE id = 2;
+UPDATE academic_coordinator SET email = 'update3@mail.com' WHERE id = 3;
+UPDATE academic_coordinator SET phone = '0555555555' WHERE id = 4;
+UPDATE academic_coordinator SET documentation = 'No' WHERE id = 5;
+
+-- DELETE academic_coordinator (Only if not referenced in coordinator_Drs)
+DELETE FROM academic_coordinator WHERE id = 5 AND id NOT IN (
+    SELECT DISTINCT cordinator_id FROM coordinator_Drs
+);
+
+-- ========================================
+-- INSERT INTO Shaykh
+-- ========================================
+INSERT INTO Shaykh (id, name, permit_number, chair_number, acadmic_id) VALUES
+                                                                           (1, 'Sh. Ahmad', 'P001', 'CH01', 1),
+                                                                           (2, 'Sh. Bilal', 'P002', 'CH02', 2),
+                                                                           (3, 'Sh. Yusuf', 'P003', 'CH03', 3),
+                                                                           (4, 'Sh. Sami', 'P004', 'CH04', 4),
+                                                                           (5, 'Sh. Tariq', 'P005', 'CH05', 1);
+
+-- UPDATE Shaykh
+UPDATE Shaykh SET name = 'Sh. Ahmad Updated' WHERE id = 1;
+UPDATE Shaykh SET permit_number = 'PX02' WHERE id = 2;
+UPDATE Shaykh SET acadmic_id = 2 WHERE id = 3;
+UPDATE Shaykh SET name = 'Sh. Sam Updated' WHERE id = 4;
+UPDATE Shaykh SET acadmic_id = 3 WHERE id = 5;
+
+-- DELETE Shaykh (Only if not referenced in session)
+DELETE FROM Shaykh WHERE id = 5 AND id NOT IN (
+    SELECT DISTINCT instructor_id FROM session
+);
+
+-- ========================================
+-- INSERT INTO session
+-- ========================================
+INSERT INTO session (id, session_permit_number, Book, name, subject, page_numbers, instructor_id) VALUES
+                                                                                                      (1, 101, 'BookA', 'Session Fiqh', 'Fiqh', 120, 1),
+                                                                                                      (2, 102, 'BookB', 'Hadith', 'Hadith', 100, 2),
+                                                                                                      (3, 103, 'BookC', 'Session Aqeedah', 'Aqeedah', 90, 3),
+                                                                                                      (4, 104, 'BookD', 'Session Tafsir', 'Tafsir', 150, 4),
+                                                                                                      (5, 105, 'BookE', 'Session Arabic', 'Arabic', 80, 5);
+
+-- UPDATE session
+UPDATE session SET Book = 'BookA Updated' WHERE id = 1;
+UPDATE session SET name = 'Hadith' WHERE id = 2;
+UPDATE session SET page_numbers = 95 WHERE id = 3;
+UPDATE session SET subject = 'Tafsir Depth' WHERE id = 4;
+UPDATE session SET Book = 'Arabic' WHERE id = 5;
+
+-- DELETE session (Only if not referenced in coordinator_Drs)
+DELETE FROM session WHERE id = 5 AND id NOT IN (
+    SELECT DISTINCT session_id FROM coordinator_Drs
+);
+
+-- ========================================
+-- INSERT INTO coordinator_Drs
+-- ========================================
+INSERT INTO coordinator_Drs (id, place, today_page, datetime, student_avg_number, session_id, cordinator_id) VALUES
+                                                                                                                 (1, 'Masjid A', 15, '2025-07-01 07:00:00', 10, 1, 1),
+                                                                                                                 (2, 'Masjid B', 20, '2025-07-02 08:30:00', 12, 2, 2),
+                                                                                                                 (3, 'Masjid C', 10, '2025-07-03 09:00:00', 8, 3, 3),
+                                                                                                                 (4, 'Masjid D', 25, '2025-07-04 06:45:00', 15, 4, 4),
+                                                                                                                 (5, 'Masjid E', 18, '2025-07-05 10:15:00', 11, 5, 5);
+
+-- UPDATE coordinator_Drs
+UPDATE coordinator_Drs SET place = 'Masjid AA' WHERE id = 1;
+UPDATE coordinator_Drs SET today_page = 22 WHERE id = 2;
+UPDATE coordinator_Drs SET student_avg_number = 9 WHERE id = 3;
+UPDATE coordinator_Drs SET datetime = '2025-07-04 07:00:00' WHERE id = 4;
+UPDATE coordinator_Drs SET today_page = 20 WHERE id = 5;
+
+-- DELETE coordinator_Drs
+DELETE FROM coordinator_Drs WHERE id = 5;
